@@ -99,6 +99,16 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   and the following is a good resource for the actual equation to implement (look at equation 
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
+
+	//TODO: Note
+	// for each observations(car coordinate)
+	//   convert obs_car ==> obs_world
+	//   for each map_landmarks
+	//     find_nearest map to obs_word then associate
+	//   
+	//   obs_world and nearest_map ==> obs_prob
+	//
+	// total_weight = product of obs_prob
 }
 
 void ParticleFilter::resample() {
