@@ -145,6 +145,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 				long double multiplier = gauss_norm*exp(-(exponent));
 				if (multiplier > 0) {
 					p.weight *= multiplier;
+					weights[i] = p.weight;
 				}
 			}
 
@@ -162,6 +163,15 @@ void ParticleFilter::resample() {
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
 
+	std::vector<Particle> resampling_particles;
+	std::default_random_engine gen;
+	for(int i=0; i< num_particles; i++) {
+		std::discrete_distribution<int> index(weights.begin(), weights.end());
+		resampling_particles[i] = particles[index(gen)];
+	}
+
+	// replace current particles
+	particles = resampling_particles;
 }
 
 Particle ParticleFilter::SetAssociations(Particle& particle, const std::vector<int>& associations, 
