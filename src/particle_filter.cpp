@@ -121,16 +121,16 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 					p.weight *= multiplier;
 					weights[i] = p.weight;
 				}
-			}
 
-			associations.push_back(association);
-			sense_x.push_back(t_obs.x);
-			sense_y.push_back(t_obs.y);
+				// associations.push_back(association);
+				// sense_x.push_back(t_obs.x);
+				// sense_y.push_back(t_obs.y);
+			}
 		}
 
 		// reassign p back to particles
 		particles[i] = p;
-		// SetAssociations(particles[i], associations, sense_x, sense_y);
+		SetAssociations(particles[i], associations, sense_x, sense_y);
 			
 	}
 }
