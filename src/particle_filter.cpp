@@ -100,15 +100,61 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
 
-	//TODO: Note
-	// for each observations(car coordinate)
-	//   convert obs_car ==> obs_world
-	//   for each map_landmarks
-	//     find_nearest map to obs_word then associate
-	//   
-	//   obs_world and nearest_map ==> obs_prob
-	//
-	// total_weight = product of obs_prob
+	for (int i = 0; i < particles.size(); i++) {
+		std::vector<LandmarkObs> observations_transf;
+		Particle p = particles[i];
+		for (LandmarkObs obs : observations) {
+			LandmarkObs trans_obj;
+			trans_obj.id = obs.id;
+			trans_obj.x = p.x + cos(p.theta)*obs.x - sin(p.theta)*obs.y;
+			trans_obj.y = p.y + sin(p.theta)*obs.x + cos(p.theta)*obs.y;
+			observations_transf.push_back(trans_obj);
+		}
+
+		p.weight = 1.0;
+
+		std::vector<int> associations;
+		std::vector<double> sense_x;
+		std::vector<double> sense_y;
+		for(LandmarkObs t_obs: observations_transf) {
+			int association = 0;
+			double closest_dist = sensor_range*sensor_range;
+			for (int j=0; j < map_landmarks.landmark_list.size(); j++) {
+				Map::single_landmark_s s_landmark = map_landmarks.landmark_list[j];	
+
+				//check map within range
+				double dist_from_particle = dist(p.x, p.y, s_landmark.x_f, s_landmark.y_f);
+				if (dist_from_particle <= sensor_range) {
+					double dist_obs_map =  dist(t_obs.x, t_obs.y, s_landmark.x_f, s_landmark.y_f);
+					if (dist_obs_map < closest_dist) {
+						closest_dist = dist_obs_map;
+						association = j;
+					}
+				}				
+			}
+
+			if (association != 0) {
+				double meas_x = t_obs.x;
+				double meas_y = t_obs.y;
+				double mu_x = map_landmarks.landmark_list[association].x_f;
+				double mu_y = map_landmarks.landmark_list[association].y_f;
+				double sig_x = std_landmark[0];
+				double sig_y = std_landmark[1];
+				long double gauss_norm = 1/(2*M_PI*sig_x*sig_y);
+				long double exponent = (pow(meas_x-mu_x,2)/2*pow(sig_x,2)) + (pow(meas_y-mu_y,2)/2*pow(sig_y,2));
+				long double multiplier = gauss_norm*exp(-(exponent));
+				if (multiplier > 0) {
+					p.weight *= multiplier;
+				}
+			}
+
+			associations.push_back(association);
+			sense_x.push_back(t_obs.x);
+			sense_y.push_back(t_obs.y);
+		}	
+
+		SetAssociations(p, associations, sense_x, sense_y);			
+	}
 }
 
 void ParticleFilter::resample() {
