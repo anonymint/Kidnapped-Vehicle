@@ -86,7 +86,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		}
 
 		p.weight = 1.0;
-
 		std::vector<int> associations;
 		std::vector<double> sense_x;
 		std::vector<double> sense_y;
@@ -110,6 +109,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 			if (association != 0) {
 				double meas_x = t_obs.x;
 				double meas_y = t_obs.y;
+				int map_id = map_landmarks.landmark_list[association].id_i;
 				double mu_x = map_landmarks.landmark_list[association].x_f;
 				double mu_y = map_landmarks.landmark_list[association].y_f;
 				double sig_x = std_landmark[0];
@@ -122,9 +122,12 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 					weights[i] = p.weight;
 				}
 
-				// associations.push_back(association);
-				// sense_x.push_back(t_obs.x);
-				// sense_y.push_back(t_obs.y);
+				associations.push_back(map_id);
+				sense_x.push_back(mu_x);
+				sense_y.push_back(mu_y);
+			} else {
+				p.weight *= numeric_limits<double>::min();
+				weights[i] = p.weight;
 			}
 		}
 
